@@ -1,26 +1,56 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { useState, useCallback } from 'react';
+import { ExampleWrapper } from './components/ExampleWrapper';
+import { API, PAGE_LIMIT } from './constants';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+import './styles.css';
+import { Passenger, ServerResponse } from './types';
+
+export default function App() {
+	const [passengers, setPassengers] = useState<Passenger[]>([]);
+	const [hasNextPage, setHasNextPage] = useState(true);
+	const [isNextPageLoading, setIsNextPageLoading] = useState(false);
+	const [totalPages, setTotalPages] = useState(0);
+
+	const fetchPassengers = useCallback(async (page: number = 0) => {
+		const responseData: ServerResponse = await fetch(
+			`${API}passenger?page=${page}&size=${PAGE_LIMIT}`
+		)
+			.then((res) => res.json())
+			.then((data) => data);
+
+		setTotalPages(responseData.totalPages);
+		setPassengers((prev) => [...prev, ...responseData.data]);
+
+		return responseData;
+	}, []);
+
+	const loadNextPage = useCallback(
+		async (..._: any) => {
+			try {
+				const currentPage = passengers.length / PAGE_LIMIT;
+				setIsNextPageLoading(true);
+
+				await fetchPassengers(currentPage);
+
+				if (passengers.length < totalPages) {
+					setHasNextPage(true);
+				}
+				setIsNextPageLoading(false);
+			} catch (error) {
+				console.error(error);
+			}
+		},
+		[fetchPassengers, passengers.length, totalPages]
+	);
+
+	return (
+		<div>
+			<ExampleWrapper
+				items={passengers}
+				hasNextPage={hasNextPage}
+				isNextPageLoading={isNextPageLoading}
+				loadNextPage={loadNextPage}
+			/>
+		</div>
+	);
 }
-
-export default App;
