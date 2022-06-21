@@ -48,11 +48,12 @@ export const ExampleWrapper: FC<Props> = ({
 					height={450}
 					itemCount={itemCount}
 					itemSize={50}
+					itemData={items}
 					onItemsRendered={onItemsRendered}
 					ref={ref}
 					width={300}>
-					{({ index, style }) => (
-						<Item index={index} style={style} item={items[index]} isItemLoaded={isItemLoaded} />
+					{({ index, style, data }) => (
+						<Item index={index} style={style} item={data[index]} isItemLoaded={isItemLoaded} />
 					)}
 				</List>
 			)}
