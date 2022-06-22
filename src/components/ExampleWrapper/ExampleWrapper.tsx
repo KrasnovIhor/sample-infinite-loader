@@ -1,8 +1,10 @@
-import { FC, useCallback } from 'react';
+import { FC, useCallback, useContext } from 'react';
 import InfiniteLoader from 'react-window-infinite-loader';
-import { FixedSizeList as List } from 'react-window';
-import { Item } from '../Item';
-import { Passenger } from '../../types';
+import { VariableSizeList as List } from 'react-window';
+import { Item } from 'components/Item';
+import { Passenger } from 'types';
+import { useMemo } from 'react';
+import { SampleContext } from 'providers';
 
 type Props = {
 	// Are there more items to load?
@@ -26,12 +28,19 @@ export const ExampleWrapper: FC<Props> = ({
 	items,
 	loadNextPage,
 }) => {
+	const { listRef, sizeMap, listHeight, chatHistoryRef } = useContext(SampleContext);
 	// If there are more items to be loaded then add an extra row to hold a loading indicator.
-	const itemCount = hasNextPage ? items.length + 1 : items.length;
+	const itemCount = useMemo(
+		() => (hasNextPage ? items.length + 1 : items.length),
+		[hasNextPage, items.length]
+	);
 
 	// Only load 1 page of items at a time.
 	// Pass an empty callback to InfiniteLoader in case it asks us to load more than once.
-	const loadMoreItems = isNextPageLoading ? () => {} : loadNextPage;
+	const loadMoreItems = useMemo(
+		() => (isNextPageLoading ? () => {} : loadNextPage),
+		[isNextPageLoading, loadNextPage]
+	);
 
 	// Every row is loaded except for our loading indicator row.
 	const isItemLoaded = useCallback(
@@ -39,24 +48,44 @@ export const ExampleWrapper: FC<Props> = ({
 		[hasNextPage, items.length]
 	);
 
+	const getItemSize = useCallback(
+		(index: number) => {
+			console.log(sizeMap.current);
+
+			return sizeMap.current?.[index] || 40;
+		},
+		[sizeMap]
+	);
+
 	return (
-		<InfiniteLoader isItemLoaded={isItemLoaded} itemCount={itemCount} loadMoreItems={loadMoreItems}>
-			{({ onItemsRendered, ref }) => (
-				<List
-					useIsScrolling
-					className='List'
-					height={450}
-					itemCount={itemCount}
-					itemSize={50}
-					itemData={items}
-					onItemsRendered={onItemsRendered}
-					ref={ref}
-					width={300}>
-					{({ index, style, data }) => (
-						<Item index={index} style={style} item={data[index]} isItemLoaded={isItemLoaded} />
-					)}
-				</List>
-			)}
-		</InfiniteLoader>
+		<div className='outer-list' ref={chatHistoryRef}>
+			<InfiniteLoader
+				isItemLoaded={isItemLoaded}
+				itemCount={itemCount}
+				loadMoreItems={loadMoreItems}>
+				{({ onItemsRendered }) => (
+					<List
+						estimatedItemSize={50}
+						className='List'
+						height={listHeight}
+						itemCount={itemCount}
+						itemSize={getItemSize}
+						itemData={items}
+						onItemsRendered={onItemsRendered}
+						ref={listRef}
+						width={'50%'}>
+						{({ index, style, data }) => (
+							<Item
+								getItemSize={getItemSize}
+								index={index}
+								style={style}
+								item={data[index]}
+								isItemLoaded={isItemLoaded}
+							/>
+						)}
+					</List>
+				)}
+			</InfiniteLoader>
+		</div>
 	);
 };
