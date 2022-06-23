@@ -9,9 +9,10 @@ type ItemProps = {
 	isItemLoaded: (index: number) => boolean;
 	getItemSize: (index: number) => number;
 	retrieveSize?: (height: number, index: number) => void;
+	isScrolling?: boolean;
 };
 
-export const Item = ({ index, style, item, isItemLoaded }: ItemProps) => {
+export const Item = ({ index, style, item, isItemLoaded, isScrolling }: ItemProps) => {
 	const { setSize, windowSize } = useContext(SampleContext);
 	const [windowWidth] = windowSize;
 
@@ -21,19 +22,27 @@ export const Item = ({ index, style, item, isItemLoaded }: ItemProps) => {
 		if (!isItemLoaded(index)) {
 			return 'Loading...';
 		}
-		return (item?.name || '') + ' ' + item?._id + ' ' + index;
-	}, [index, isItemLoaded, item?._id, item?.name]);
+		return `${index} ${item?.name || ''}`;
+	}, [index, isItemLoaded, item]);
 
 	useEffect(() => {
 		if (itemRef.current) {
-			setSize(index, itemRef.current.offsetHeight);
-			// console.log(itemRef.current, itemRef.current.offsetHeight);
+			const height = itemRef.current.getBoundingClientRect().height;
+
+			setSize(index, height);
 		}
 	}, [index, setSize, windowWidth]);
 
 	return (
-		<div className='ListItem' ref={itemRef} style={style}>
-			{content}
+		<div style={style}>
+			<div
+				className='ListItem'
+				ref={itemRef}
+				style={{
+					backgroundColor: index % 2 ? 'slategray' : 'wheat',
+				}}>
+				{content}
+			</div>
 		</div>
 	);
 };

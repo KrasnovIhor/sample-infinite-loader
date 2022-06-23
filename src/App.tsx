@@ -2,24 +2,16 @@ import { useState, useCallback } from 'react';
 import { ExampleWrapper } from 'components/ExampleWrapper';
 import { API, PAGE_LIMIT } from './constants';
 
-import './styles.css';
 import { Passenger, ServerResponse } from 'types';
-import { useContext } from 'react';
-import { SampleContext } from 'providers';
-import { useEffect } from 'react';
+import { faker } from '@faker-js/faker';
+
+import './styles.css';
 
 export default function App() {
-	const { listRef } = useContext(SampleContext);
 	const [passengers, setPassengers] = useState<Passenger[]>([]);
 	const [hasNextPage, setHasNextPage] = useState(true);
 	const [isNextPageLoading, setIsNextPageLoading] = useState(false);
 	const [totalPages, setTotalPages] = useState(0);
-
-	const handleScroll = useCallback(() => {
-		if (listRef.current) {
-			listRef.current.resetAfterIndex(0);
-		}
-	}, [listRef]);
 
 	const fetchPassengers = useCallback(async (page: number = 0) => {
 		const responseData: ServerResponse = await fetch(
@@ -29,7 +21,13 @@ export default function App() {
 			.then((data) => data);
 
 		setTotalPages(responseData.totalPages);
-		setPassengers((prev) => [...prev, ...responseData.data]);
+		setPassengers((prev) => [
+			...prev,
+			...responseData.data.map((passenger, index, array) => ({
+				...passenger,
+				name: array[index].name + ' ' + faker.lorem.text(),
+			})),
+		]);
 
 		return responseData;
 	}, []);
@@ -52,10 +50,6 @@ export default function App() {
 		},
 		[fetchPassengers, passengers.length, totalPages]
 	);
-
-	useEffect(() => {
-		handleScroll();
-	}, [handleScroll, passengers]);
 
 	return (
 		<ExampleWrapper

@@ -14,12 +14,21 @@ export const SampleProvider: FC<SampleProviderProps> = ({ children }) => {
 	const sizeMap = useRef<Record<number, number>>({});
 	const chatHistoryRef = useRef<HTMLDivElement>(null);
 	const listRef = useRef<VariableSizeList<Passenger[]>>(null);
+	const windowSize = useWindowSize();
 
-	const setSize = useCallback((index: number, size: number) => {
-		sizeMap.current = { ...sizeMap.current, [index]: size };
+	const handleScroll = useCallback(() => {
+		if (listRef.current) {
+			listRef.current.resetAfterIndex(0);
+		}
 	}, []);
 
-	const windowSize = useWindowSize();
+	const setSize = useCallback(
+		(index: number, size: number) => {
+			sizeMap.current = { ...sizeMap.current, [index]: size };
+			handleScroll();
+		},
+		[sizeMap, handleScroll]
+	);
 
 	useEffect(() => {
 		if (chatHistoryRef.current) {

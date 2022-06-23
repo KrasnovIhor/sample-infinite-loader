@@ -48,14 +48,7 @@ export const ExampleWrapper: FC<Props> = ({
 		[hasNextPage, items.length]
 	);
 
-	const getItemSize = useCallback(
-		(index: number) => {
-			console.log(sizeMap.current);
-
-			return sizeMap.current?.[index] || 40;
-		},
-		[sizeMap]
-	);
+	const getItemSize = useCallback((index: number) => sizeMap.current?.[index] || 40, [sizeMap]);
 
 	return (
 		<div className='outer-list' ref={chatHistoryRef}>
@@ -65,17 +58,20 @@ export const ExampleWrapper: FC<Props> = ({
 				loadMoreItems={loadMoreItems}>
 				{({ onItemsRendered }) => (
 					<List
+						useIsScrolling
 						estimatedItemSize={50}
 						className='List'
 						height={listHeight}
 						itemCount={itemCount}
 						itemSize={getItemSize}
+						itemKey={(index, data) => (data[index] ? data[index]._id : index)}
 						itemData={items}
 						onItemsRendered={onItemsRendered}
 						ref={listRef}
-						width={'50%'}>
-						{({ index, style, data }) => (
+						width='50%'>
+						{({ index, style, data, isScrolling }) => (
 							<Item
+								isScrolling={isScrolling}
 								getItemSize={getItemSize}
 								index={index}
 								style={style}
